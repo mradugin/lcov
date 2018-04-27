@@ -51,6 +51,7 @@
 
 use strict;
 use File::Basename; 
+use File::Find;
 use File::Spec::Functions qw /abs2rel catdir file_name_is_absolute splitdir
 			      splitpath catpath/;
 use Getopt::Long;
@@ -463,7 +464,7 @@ if (system_no_output(3, $gcov_tool, "--help") == -1)
 # Determine gcov options
 $gcov_caps = get_gcov_capabilities();
 push(@gcov_options, "-b") if ($gcov_caps->{'branch-probabilities'} &&
-			      ($br_coverage || $func_coverage));
+ 			      ($br_coverage || $func_coverage));
 push(@gcov_options, "-c") if ($gcov_caps->{'branch-counts'} &&
 			      $br_coverage);
 push(@gcov_options, "-a") if ($gcov_caps->{'all-blocks'} &&
@@ -775,7 +776,19 @@ sub gen_info($)
 	{
 		info("Scanning $directory for $ext files ...\n");
 
-		@file_list = `find "$directory" $maxdepth $follow -name \\*$ext -type f -o -name \\*$ext -type l 2>/dev/null`;
+		my $_fn = sub
+		{
+			if (-f $_)
+			{
+				if ($_ =~ m/$ext$/)
+				{
+					push @file_list, $File::Find::name;
+				}
+			}
+		};
+
+		find( { wanted => $_fn }, $directory);
+
 		chomp(@file_list);
 		if (!@file_list) {
 			warn("WARNING: no $ext files found in $directory - ".
