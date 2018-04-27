@@ -577,7 +577,7 @@ if (defined($output_filename) && ($output_filename ne "-"))
 
 	# Make $output_filename an absolute path because we're going
 	# to change directories while processing files
-	if (!($output_filename =~ /^\/(.*)$/))
+	if (!($output_filename =~ /^\/(.*)$/) && !($output_filename =~ /^[A-Za-z]:\/(.*)$/))
 	{
 		$output_filename = $cwd."/".$output_filename;
 	}
